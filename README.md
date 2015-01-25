@@ -1,6 +1,17 @@
 # Polymer Time Picker
-This projetc is an experimental Time Picker inspired by CyanogenMod Time Picker using Polymer.
+This project is an experimental Time Picker inspired by CyanogenMod Time Picker using Polymer.
 
 ## Setup:
- - Get Polymer: https://www.polymer-project.org/docs/start/getting-the-code.html
+ - <a href="https://www.polymer-project.org/docs/start/getting-the-code.html" target="_blank">Get Polymer</a>
  - Install required elements: ```bower install Polymer/paper-elements```
+ 
+ ##Screeshots
+ ![Alt Screenshots](/resources/screenshot.png?raw=true "ScreenShots")
+ 
+ ## TODO
+ - Improve minutes picker precision
+ - Hide on click outside picker
+ - Focus the input on click outside picker
+ - Show/Hide animations
+ 
+ 
