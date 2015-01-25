@@ -1,0 +1,210 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-shadow/paper-shadow.html">
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="extended-fab.html">
+
+<polymer-element name="time-picker" attributes="value label size" block>
+  <template>
+    <style>
+      
+      #timeInput {
+        width: {{size || 37}}px;
+        text-align: center;
+      }
+      #container {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        display: none;
+        z-index: 10;
+        width: 350px;
+        background-color: #3c3c3c;
+        font-family: Arial, Verdana, sans-serif;
+        transition: all 0.5s ease-in-out;
+      }
+      #display {
+        color: #ddd;
+        font-size: 2em;
+        font-weight: bold;
+        padding: 10px;
+        text-align: center;
+      }
+      extended-fab {
+        background-color:#525293;
+        position: absolute;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.5em;
+        top: 180px;
+        left: 155px;
+      }
+      extended-fab:hover { background-color:#6161b2;}
+      #clockContainer { height: 300px;}
+      #hours {
+        visibility: hidden;
+        transition: all 0.5s ease-in-out;
+      }
+      #minutes {
+        visibility: hidden;
+        transition: all 0.5s ease-in-out;
+      }
+      #done, #cancel { color: #ddd;}
+      
+      .h00 { transform: rotate(270deg) translate(5em) rotate(-270deg);}
+      .h01 { transform: rotate(300deg) translate(5em) rotate(-300deg);}
+      .h02 { transform: rotate(330deg) translate(5em) rotate(-330deg);}
+      .h03 { transform: translate(5em);}
+      .h04 { transform: rotate(30deg) translate(5em) rotate(-30deg);}
+      .h05 { transform: rotate(60deg) translate(5em) rotate(-60deg);}
+      .h06 { transform: rotate(90deg) translate(5em) rotate(-90deg);}
+      .h07 { transform: rotate(120deg) translate(5em) rotate(-120deg);}
+      .h08 { transform: rotate(150deg) translate(5em) rotate(-150deg);}
+      .h09 { transform: rotate(180deg) translate(5em) rotate(-180deg);}
+      .h10 { transform: rotate(210deg) translate(5em) rotate(-210deg);}
+      .h11 { transform: rotate(240deg) translate(5em) rotate(-240deg);}
+      .h12, .m00 { transform: rotate(270deg) translate(8em) rotate(-270deg);}
+      .h13, .m05 { transform: rotate(300deg) translate(8em) rotate(-300deg);}
+      .h14, .m10 { transform: rotate(330deg) translate(8em) rotate(-330deg);}
+      .h15, .m15 { transform: translate(8em);}
+      .h16, .m20 { transform: rotate(30deg) translate(8em) rotate(-30deg);}
+      .h17, .m25 { transform: rotate(60deg) translate(8em) rotate(-60deg);}
+      .h18, .m30 { transform: rotate(90deg) translate(8em) rotate(-90deg);}
+      .h19, .m35 { transform: rotate(120deg) translate(8em) rotate(-120deg);}
+      .h20, .m40 { transform: rotate(150deg) translate(8em) rotate(-150deg);}
+      .h21, .m45 { transform: rotate(180deg) translate(8em) rotate(-180deg);}
+      .h22, .m50 { transform: rotate(210deg) translate(8em) rotate(-210deg);}
+      .h23, .m55 { transform: rotate(240deg) translate(8em) rotate(-240deg);}
+
+    </style>
+    <paper-input id="timeInput" value={{value}} label={{label}}></paper-input>
+    <paper-shadow id="container" z="3" vertical layout>
+      <div id="display">
+        <span id="hoursDisplay">{{hoursValue}}</span> : 
+        <span id="minutesDisplay">{{minutesValue}}</span>
+      </div>
+      <div id="clockContainer">
+        <div id="hours"></div>
+        <div id="minutes"></div>
+      </div>
+      <div horizontal around-justified layout>
+        <paper-icon-button id="cancel" icon="close"></paper-icon-button>
+        <paper-icon-button id="done" icon="done"></paper-icon-button>
+      </div>
+    </paper-shadow>
+  </template>
+  
+  
+  <script>
+    Polymer({
+      ready: function() {
+        var me = this,
+            numericValue;
+        me.$.timeInput.onfocus = function(a,b) {
+          me.$.container.style.display = "block";
+        };
+        
+        me.$.cancel.onclick = function() {
+          me.closeContainer();
+        };
+        
+        me.$.done.onclick = function() {
+          me.value = me.hoursValue + ":" + me.minutesValue;
+          setTimeout(function(){me.closeContainer()},500);
+        };
+        
+        me.initDisplay();
+        me.initHoursClock();
+        me.initMinutesClock();
+        me.toggleMinutesHours(true);
+      },
+      
+      closeContainer: function() {
+        this.$.container.style.display = "none";
+        //show hours panel if reopened
+        this.toggleMinutesHours(true);
+        //TODO try to refocus without triggering the onfocus above
+        //this.$.timeInput.focus();
+      },
+      
+      toggleMinutesHours: function(showHours) {
+        if (showHours) {
+          this.$.hours.style.visibility = "visible";
+          this.$.hours.style.opacity = "1";
+          this.$.minutes.style.visibility = "hidden";
+          this.$.minutes.style.opacity = "0";
+        } else {
+          this.$.hours.style.visibility = "hidden";
+          this.$.hours.style.opacity = "0";
+          this.$.minutes.style.visibility = "visible";
+          this.$.minutes.style.opacity = "1";
+        }
+      },
+      
+      highlightElement: function(elem) {
+        var player = elem.animate(
+          [
+            {color:"#c13535"},
+            {color:"#ddd"}
+          ], {
+            direction: 'alternate',
+            duration: 500,
+            iterations: 1
+          }
+        );
+      },
+      
+      initDisplay: function() {
+        var hoursMinutes = this.value.split(":");
+        // if no value provided, set default time to now
+        if (!hoursMinutes || hoursMinutes.length < 2) {
+          var d = new Date(), hours, minutes;
+          hours = d.getHours() < 10 ? "0" + d.getHours() : d.getHours();
+          minutes = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes();
+          hoursMinutes = [hours , minutes];
+        }
+        this.hoursValue = hoursMinutes[0];
+        this.minutesValue = hoursMinutes[1];
+      },
+      
+      initHoursClock: function() {
+        // init hours
+        var me = this;
+        for (var i = 0; i < 24; i++) {
+          var s = document.createElement('extended-fab');
+          numericValue = i < 10 ? "0" + i : i;
+          s.innerHTML = numericValue;
+          s.className = "h" + numericValue;
+          s.onclick = function(num) {
+            return function() {
+              me.hoursValue = num;
+              me.highlightElement(me.$.hoursDisplay);
+              me.toggleMinutesHours(false);              
+            }
+          }(numericValue);
+          me.$.hours.appendChild(s);
+        }
+      },
+      
+      initMinutesClock: function() {
+        var me = this;
+        for (var i = 0; i < 60; i += 5) {
+          var s = document.createElement('extended-fab');
+          numericValue = i < 10 ? "0" + i : i;
+          s.innerHTML = numericValue;
+          s.className = "m" + numericValue;
+          s.onclick = function(num) {
+            return function() {
+              me.minutesValue = num;
+              me.highlightElement(me.$.minutesDisplay);
+              me.$.done.click();
+            }
+          }(numericValue);
+          me.$.minutes.appendChild(s);
+        }
+      }
+    });
+  </script>
+  
+</polymer-element>
